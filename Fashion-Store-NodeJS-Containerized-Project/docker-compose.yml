@@ -1,0 +1,24 @@
+services:
+  traefik:
+    image: traefik:v2.11          # Traefik uses the official image, no Dockerfile needed
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=webnet"
+      - "--entrypoints.web.address=:80"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+    ports:
+      - "0.0.0.0:80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+
+  db:
+
+
+  backend:
+
+
+  frontend:
