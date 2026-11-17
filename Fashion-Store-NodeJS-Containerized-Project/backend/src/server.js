@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { testConnection } = require('./config/db');
+const { testConnection,pool } = require('./config/db');
 
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
@@ -34,16 +34,34 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// Health check
+// Health check (liveness): no database query
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// Global error handler
+// Readiness: one fast database check, no retries
+app.get('/api/ready', async (req, res) => {
+  let timer;
+  try {
+    await Promise.race([
+      pool.query('SELECT 1 FROM products LIMIT 1'),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('timeout')), 2000);
+      }),
+    ]);
+    res.status(200).json({ status: 'ready' });
+  } catch (err) {
+    console.error('Readiness check failed:', err.message);
+    res.status(503).json({ status: 'not ready' });
+  } finally {
+    clearTimeout(timer);
+  }
+});
+
+// Global error handler (stays after all routes)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({ message: err.message || 'Internal server error' });
 });
 
 // Start
-testConnection()
+testConnection().catch(console.error);
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-

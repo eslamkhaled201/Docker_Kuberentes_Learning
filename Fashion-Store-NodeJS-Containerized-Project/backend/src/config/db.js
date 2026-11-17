@@ -24,20 +24,20 @@ async function testConnection() {
       const conn = await pool.getConnection();
       console.log(`MySQL connected on attempt ${attempt}`);
       conn.release();
-      return;
+      return true;
     } catch (err) {
       lastError = err;
       console.error(`MySQL connection attempt ${attempt}/${maxAttempts} failed: ${err.message}`);
 
       if (attempt < maxAttempts) {
-        console.log('Retrying in 5 seconds...');
-        await wait(5000);
+        console.log('Retrying in 10 seconds...');
+        await wait(20000);
       }
     }
   }
 
   console.error('MySQL connection failed after 3 attempts:', lastError?.message);
-  process.exit(1);
+  return false;
 }
 
 module.exports = { pool, testConnection };
