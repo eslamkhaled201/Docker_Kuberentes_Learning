@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { calculateOrderTotals } = require('../utils/orderTotals');
 
 const generateOrderNumber = () => 'ORD-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
@@ -26,10 +27,7 @@ exports.createOrder = async (req, res) => {
       }
     }
 
-    let subtotal = items.reduce((s, i) => s + (parseFloat(i.price) + parseFloat(i.price_modifier || 0)) * i.quantity, 0);
-    const shipping_cost = subtotal >= 150 ? 0 : 9.99;
-    const tax = subtotal * 0.08;
-    const total = subtotal + shipping_cost + tax;
+    const { subtotal, shipping_cost, tax, total } = calculateOrderTotals(items);
 
     const orderNumber = generateOrderNumber();
     const [orderResult] = await conn.query(
