@@ -9,5 +9,5 @@ export const deleteProduct = (id) => api.delete(`/products/${id}`);
 export const uploadImage = (file) => {
   const form = new FormData();
   form.append('image', file);
-  return api.post('/upload', form);
+  return api.post('/uploads', form);
 };
